@@ -1,3 +1,12 @@
+/* --------------------------------------------------------------------------
+Disciplina  : Lógica de Programação, turma IB, 2026S1
+Nome        : Eduardo Abreu
+Linguagem   : C
+Problema    : https://judge.beecrowd.com/pt/problems/view/1013
+Data        : 8/04/2026
+Objetivo    : Ler 3 valores inteiros e apresentar o maior dos 3.
+Aprendizado : Uso básico de variáveis, "scanf", "printf" e manipulação algébrica em C.
+-------------------------------------------------------------------------- */
 #include <stdio.h>
 
 int main() {
