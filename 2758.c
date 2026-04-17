@@ -1,3 +1,12 @@
+/* --------------------------------------------------------------------------
+Disciplina  : Lógica de Programação, turma IB, 2026S1
+Nome        : Eduardo Abreu
+Linguagem   : C
+Problema    : https://judge.beecrowd.com/pt/problems/view/2758
+Data        : 9/04/2026
+Objetivo    : Ler 4 valores decimais e manipulá-los fazendo uso do "printf".
+Aprendizado : Usos diversos do printf e seus diferentes comandos.
+-------------------------------------------------------------------------- */
 #include <stdio.h>
  
 int main() {
