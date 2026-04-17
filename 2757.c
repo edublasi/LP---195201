@@ -1,3 +1,12 @@
+/* --------------------------------------------------------------------------
+Disciplina  : Lógica de Programação, turma IB, 2026S1
+Nome        : Eduardo Abreu
+Linguagem   : C
+Problema    : https://judge.beecrowd.com/pt/problems/view/2757
+Data        : 9/04/2026
+Objetivo    : Ler 3 valores inteiros e manipulá-los fazendo uso do "printf".
+Aprendizado : Usos diversos do printf e seus diferentes comandos.
+-------------------------------------------------------------------------- */
 #include <stdio.h>
 
 int main() {
