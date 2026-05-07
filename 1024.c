@@ -3,7 +3,7 @@ Disciplina  : Lógica de Programação, turma IB, 2026S1
 Nome        : Eduardo Abreu
 Linguagem   : C
 Problema    : https://judge.beecrowd.com/pt/problems/view/1024
-Data        : 8/04/2026
+Data        : 7/05/2026
 Objetivo    : Realizar 3 passadas, realizando alterações na string respeitando suas condições.
 Aprendizado : Uso de ponteiros, manipulação algébrica e de strings, aritmética de ponteiros.
 -------------------------------------------------------------------------- */
