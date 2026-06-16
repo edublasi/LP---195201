@@ -6,11 +6,10 @@ Problema    : Jogo de sudoku
 Objetivo    : Resolver o Sudoku
 Aprendizado : Lógica de programação, uso de loops, condições, funções, structs, linguagem C
 -------------------------------------------------------------------------- */
-#define MAX 81
+#define MAX 257
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 
 // Estruturas do código
 typedef struct Config
@@ -18,17 +17,25 @@ typedef struct Config
     int N;
     int mode;
     int pmode;
+    int input;
+    int generic;
+    int solve;
 } Config;
 
-// Prototipos das funções
+// Protótipos das funções
 void playGame(int **tab, int N, int M);
 bool ismovValid(int **tab, int i, int j, int num, int N, int M);
 bool win(int **tab, int N, int M);
 bool solveSudoku(int **tab, int N, int M);
-int solveSudokuComplete(int **tab, int N, int M)
+int solveSudokuComplete(int **tab, int N, int M, int *counter);
+bool solveSudokuGeneric(int **tab,int N, int M, int count, int *V);
+int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter);
+int ValidGeneric(int **tab, int N, int *V);
+void printTabGeneric(int **tab, int N, int M, int *V);
+int loadfile(int **tab, int N, int input);
 void printTab(int **tab, int N, int M);
 Config lobby(void);
-int loadfile(int **tab, int N);
+void ClearBuffer(void);
 
 // Função principal do código
 int main(void)
@@ -42,28 +49,81 @@ int main(void)
         tab[i] = (int *) malloc(game.N * sizeof(int));
     }
 
-    loadfile(tab, game.N);
+    loadfile(tab, game.N, game.input);
     printf("Loading board for size %d\n", game.N);
-
-    printTab(tab, game.N, M);
 
     if (game.pmode == 1)
     {
-        printf("Processing\n");
+        // Sudoku com input genérico mostrando todas as soluções
+        if(game.generic == 0 && game.solve == 0)
+        {
+            int *V = (int *) malloc(MAX * sizeof(int));
+            int count = ValidGeneric(tab, game.N, V);
+            int counter = 0;
+            
+            printTabGeneric(tab, game.N, M, V);
+            printf("Processing\n");
+            
+            solveSudokuCompleteGeneric(tab, game.N, M, count, V, &counter);
+            printf("Completed, with a total of %d solutions\n", counter);
 
-        if (solveSudoku(tab, game.N, M))
+            free(V);
+            V = NULL;
+        }
+        // Sudoku com input padrão mostrando todas as soluções
+        else if(game.solve == 0 && game.generic == 1)
+        {
+            int counter = 0; 
+            printTab(tab, game.N, M);
+            printf("Processing all solutions\n");
+            
+            solveSudokuComplete(tab, game.N, M, &counter);
+            printf("Completed, with a total of %d solutions\n", counter);
+        }
+        // Sudoku padrão mostrando uma solução
+        else if (game.solve == 1 && game.generic == 1)
         {
             printTab(tab, game.N, M);
-            printf("Completed\n");
+            printf("Processing\n");
+            
+            if(solveSudoku(tab, game.N, M))
+            {
+                printTab(tab, game.N, M);
+                printf("Solution found\n");
+            }
+            else
+            {
+                printf("No solution exists\n");
+            }
         }
-        else
+        // Sudoku com input genérico mostrando uma solução
+        else if (game.solve == 1 && game.generic == 0)
         {
-            printf("The AI could not find a solution");
+            int *V = (int *) malloc(MAX * sizeof(int));
+            int count = ValidGeneric(tab, game.N, V);
+            
+            printTabGeneric(tab, game.N, M, V);
+            printf("Processing\n");
+            
+            if(solveSudokuGeneric(tab, game.N, M, count, V))
+            {
+                printTabGeneric(tab, game.N, M, V);
+                printf("Solution found\n");
+            }
+            else
+            {
+                printf("No solutions exist\n");
+            }
+            
+            free(V);
+            V = NULL;
         }
     }
     else
     {
+        printTab(tab, game.N, M);
         printf("Good luck!\n");
+        
         playGame(tab, game.N, M);
     }
 
@@ -75,6 +135,7 @@ int main(void)
 
     return 0;
 }
+
 
 // Valida a jogada
 bool ismovValid(int **tab, int i, int j, int num, int N, int M)
@@ -136,6 +197,58 @@ bool win(int **tab, int N, int M)
     }
 
     return true;
+}
+
+// Carrega os tabuleiros dispostos nos arquivos de input
+int loadfile(int **tab, int N, int input)
+{
+    FILE *file;
+    
+    switch (input) {
+        case 1:
+            file = fopen("input1.txt", "r");
+            break;
+        case 2:
+            file = fopen("input2.txt", "r");
+            break;
+        case 3:
+            file = fopen("input3.txt", "r");
+            break;
+        case 4:
+            file = fopen("input4.txt", "r");
+            break;
+        default:
+            printf("Invalid input choice!\n");
+            return 1; 
+    }
+
+    // Verifica se o arquivo foi encontrado e aberto com sucesso
+    if (file == NULL) {
+        printf("Erro: Nao foi possivel abrir o arquivo input2.txt\n");
+        return 1; 
+    }
+
+    char temp[10];
+
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < N; j++)
+        {
+            fscanf(file, "%s", temp);
+            
+            if ((temp[0] >= '0' && temp[0] <= '9') || temp[0] == '-') {
+                tab[i][j] = atoi(temp);
+            }
+            else 
+            {
+                tab[i][j] = -(int)temp[0];
+            }
+        }
+    }
+  
+    fclose(file);
+
+    return 0;
 }
 
 // Permite que o usuário jogue o sudoku
@@ -216,7 +329,7 @@ bool solveSudoku(int **tab, int N, int M)
 }
 
 // Resolvedor exibindo todos os casos de resposta possíveis
-int solveSudokuComplete(int **tab, int N, int M)
+int solveSudokuComplete(int **tab, int N, int M, int *counter)
 {
     for (int i = 0; i < N; i++)
     {
@@ -230,7 +343,7 @@ int solveSudokuComplete(int **tab, int N, int M)
                     {
                         tab[i][j] = num;
 
-                        solveSudoku(tab, N, M);
+                        solveSudokuComplete(tab, N, M, counter);
                       
                         tab[i][j] = 0;
                     }
@@ -241,26 +354,98 @@ int solveSudokuComplete(int **tab, int N, int M)
         }
     }
 
+    (*counter)++;
     printTab(tab, N, M);
+    printf("%d", *counter);
+    return 0;
 }
 
-// Verifica os valores de entrada
-void valValid(int **tab, int N)
+// Resolvedor usando quaisquer valores de entrada genéricos
+bool solveSudokuGeneric(int **tab, int N, int M, int count, int *V)
 {
-    int V[MAX] = {0};
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < N; j++)
+        {
+            if (tab[i][j] == 0)
+            {
+                for (int num = 1; num <= count; num++)
+                {
+                    if (ismovValid(tab, i, j, num, N, M))
+                    {
+                        tab[i][j] = num;
+
+                        if (solveSudokuGeneric(tab, N, M, count, V))
+                        {
+                            return true;
+                        }
+                      
+                        tab[i][j] = 0;
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+// Resolvedor exibindo todos os casos de resposta possíveis e usando quaisquer valores de entrada genéricos
+int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter)
+{
+    for (int i = 0; i < N; i++)
+    {
+        for (int j = 0; j < N; j++)
+        {
+            if (tab[i][j] == 0)
+            {
+                for (int num = 1; num <= count; num++)
+                {
+                    if (ismovValid(tab, i, j, num, N, M))
+                    {
+                        tab[i][j] = num;
+
+                        solveSudokuCompleteGeneric(tab, N, M, count, V, counter);
+                      
+                        tab[i][j] = 0;
+                    }
+                }
+
+                return 1;
+            }
+        }
+    }
+
+    (*counter)++;
+    printTabGeneric(tab, N, M, V);
+    printf("%d", *counter);
+    return 0;
+}
+
+// Verifica e converte os valores de entrada
+int ValidGeneric(int **tab, int N, int *V)
+{
     int lsup = 1;
-    V[0] = tab[0][0];
+    int value = 0;
 
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
+            if(tab[i][j] == 0)
+            {
+                continue;
+            }
+
             int flag = 0;
             for(int x = 0; x < MAX; x++)
             {
                 if (tab[i][j] == V[x])
                 {   
                     flag = 1;
+                    value = x;
                     break;
                 }
             }
@@ -269,40 +454,89 @@ void valValid(int **tab, int N)
                 if (lsup < MAX) 
                 {
                     V[lsup] = tab[i][j];
-                    lsup++;              
+                    value = lsup; 
+                    lsup++;            
                 }
+
             }
+
+            tab[i][j] = value;
         }
     }
+
+    return (lsup - 1);
 }
 
-void Converter(int **tab, int V[MAX], int N)
+// Imprime o tabuleiro no console usando os valores genéricos
+void printTabGeneric(int **tab, int N, int M, int *V)
 {
-    
-}
 
-// Carrega os tabuleiros dispostos nos arquivos de input
-int loadfile(int **tab, int N)
-{
-    FILE *file = fopen("input2.txt", "r");
+    printf("\n");
+    printf("     ");
 
-    // Verifica se o arquivo foi encontrado e aberto com sucesso
-    if (file == NULL) {
-        printf("Erro: Nao foi possivel abrir o arquivo input2.txt\n");
-        return 1; 
+    for (int j = 0; j < N; j++)
+    {
+        if (j > 0 && j % M == 0)
+        {
+            printf("  ");
+        }
+
+        printf("%2d ", j);
     }
+
+    printf("\n");
 
     for (int i = 0; i < N; i++)
     {
+        if (i > 0 && i % M == 0)
+        {
+            printf("\n     ");
+
+            for (int j = 0; j < N; j++)
+            {
+                printf("---");
+
+                if ((j + 1) % M == 0 && j != N - 1)
+                {
+                    printf("+");
+                }
+            }
+
+            printf("\n");
+        }
+
+        printf("%2d | ", i);
+
         for (int j = 0; j < N; j++)
         {
-            fscanf(file, "%d", &tab[i][j]);
-        }
-    }
-  
-    fclose(file);
+            if (tab[i][j] == 0)
+            {
+                printf(" . ");
+            }
+            else
+            {
+                int original_value = V[tab[i][j]];
 
-    return 0;
+                if (original_value < 0) 
+                {
+                    printf(" %c ", -original_value);
+                } 
+                else 
+                {
+                printf("%2d ", original_value);
+                }
+            }
+
+            if ((j + 1) % M == 0 && j != N - 1)
+            {
+                printf("| ");
+            }
+        }
+
+        printf("\n");
+    }
+
+    printf("\n");
 }
 
 // Imprime o tabuleiro no console
@@ -377,6 +611,7 @@ Config lobby(void)
     {
         SIZE,
         PLAYER,
+        INPUT,
         DONE
     } state = SIZE;
 
@@ -400,11 +635,10 @@ Config lobby(void)
                 if (Lconfig.N == 16)
                 {
                     char anw;
-                    int c;
                     printf("This is a challenge. Continue? (y/n)\n");
                     scanf(" %c", &anw);
 
-                    while ((c = getchar()) != '\n' && c != EOF);
+                    ClearBuffer();
 
                     if (anw == 'n' || anw == 'N')
                     {
@@ -413,11 +647,44 @@ Config lobby(void)
                     }
                 }
 
-                state = PLAYER;
+                state = INPUT;
             }
             else
             {
                 printf("Invalid size!\n");
+                ClearBuffer();
+            }
+        }
+        else if (state == INPUT)
+        {
+            printf("========================================\n");
+            printf("                 INPUT                  \n");
+            printf("========================================\n");
+
+            printf("Choose the input\n");
+            printf("input1.txt (1)\n");
+            printf("input2.txt (2)\n");
+            printf("input3.txt (3)\n");
+            printf("input4.txt (4)\n");
+            scanf("%d", &Lconfig.input);
+
+            if(Lconfig.input == 1 || Lconfig.input == 2 || Lconfig.input == 3 || Lconfig.input == 4)
+            {
+                printf("========================================\n");
+                printf("                 INPUT                  \n");
+                printf("========================================\n");
+
+                printf("Choose the input mode\n");
+                printf("Random input\"generic\" (0)\n");
+                printf("1 to N\"standard\" (1)\n");
+                scanf("%d", &Lconfig.generic);
+
+                state = PLAYER;
+            }
+            else
+            {
+                printf("Invalid input!\n");
+                ClearBuffer();
             }
         }
         else if (state == PLAYER)
@@ -433,14 +700,40 @@ Config lobby(void)
 
             if (Lconfig.pmode == 0 || Lconfig.pmode == 1)
             {
-                state = DONE;
-            }
+                if(Lconfig.pmode == 1)
+                {
+                    printf("========================================\n");
+                    printf("                SUDOKU                  \n");
+                    printf("========================================\n");
+
+                    printf("Choose the sudoku resolution:\n");
+                    printf("Sudoku all solutions (0)\n");
+                    printf("Sudoku unique solution (1)\n");
+                    scanf("%d", &Lconfig.solve);
+
+                    if(Lconfig.solve == 0 || Lconfig.solve == 1)
+                    {
+                        state = DONE;
+                    }
+                    else
+                    {
+                        printf("Invalid resolution mode!\n");
+                        ClearBuffer();
+                    }
+                }
+            }    
             else
             {
                 printf("Invalid player mode!\n");
+                ClearBuffer();
             }
         }
     }
 
     return Lconfig;
+}
+
+void ClearBuffer(void) {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
 }
