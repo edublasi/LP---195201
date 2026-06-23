@@ -27,9 +27,9 @@ void playGame(int **tab, int N, int M);
 bool ismovValid(int **tab, int i, int j, int num, int N, int M);
 bool win(int **tab, int N, int M);
 bool solveSudoku(int **tab, int N, int M);
-int solveSudokuComplete(int **tab, int N, int M, int *counter);
+void solveSudokuComplete(int **tab, int N, int M, int *counter);
 bool solveSudokuGeneric(int **tab,int N, int M, int count, int *V);
-int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter);
+void solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter);
 int ValidGeneric(int **tab, int N, int *V);
 void printTabGeneric(int **tab, int N, int M, int *V);
 int loadfile(int **tab, int N, int input);
@@ -54,77 +54,107 @@ int main(void)
 
     if (game.pmode == 1)
     {
-        // Sudoku com input genérico mostrando todas as soluções
-        if(game.generic == 0 && game.solve == 0)
+        switch (game.solve)
         {
-            int *V = (int *) malloc(MAX * sizeof(int));
-            int count = ValidGeneric(tab, game.N, V);
-            int counter = 0;
-            
-            printTabGeneric(tab, game.N, M, V);
-            printf("Processing\n");
-            
-            solveSudokuCompleteGeneric(tab, game.N, M, count, V, &counter);
-            printf("Completed, with a total of %d solutions\n", counter);
+            case 0:
+                // Sudoku com input genérico mostrando todas as soluções
+                int counter = 0;
 
-            free(V);
-            V = NULL;
-        }
-        // Sudoku com input padrão mostrando todas as soluções
-        else if(game.solve == 0 && game.generic == 1)
-        {
-            int counter = 0; 
-            printTab(tab, game.N, M);
-            printf("Processing all solutions\n");
+                if (game.generic == 0)
+                {
+                    int *V = (int *) malloc(MAX * sizeof(int));
+                    int count = ValidGeneric(tab, game.N, V);
             
-            solveSudokuComplete(tab, game.N, M, &counter);
-            printf("Completed, with a total of %d solutions\n", counter);
-        }
-        // Sudoku padrão mostrando uma solução
-        else if (game.solve == 1 && game.generic == 1)
-        {
-            printTab(tab, game.N, M);
-            printf("Processing\n");
+                    printTabGeneric(tab, game.N, M, V);
+                    printf("Processing\n");
             
-            if(solveSudoku(tab, game.N, M))
-            {
-                printTab(tab, game.N, M);
-                printf("Solution found\n");
-            }
-            else
-            {
-                printf("No solution exists\n");
-            }
-        }
-        // Sudoku com input genérico mostrando uma solução
-        else if (game.solve == 1 && game.generic == 0)
-        {
-            int *V = (int *) malloc(MAX * sizeof(int));
-            int count = ValidGeneric(tab, game.N, V);
+                    solveSudokuCompleteGeneric(tab, game.N, M, count, V, &counter);
+                    printf("Completed, with a total of %d solutions\n", counter);
+
+                    free(V);
+                    V = NULL;
+                }
+                // Sudoku padrão mostrando todas as soluções
+                else
+                {
+                    printTab(tab, game.N, M);
+                    printf("Processing all solutions\n");
             
-            printTabGeneric(tab, game.N, M, V);
-            printf("Processing\n");
+                    solveSudokuComplete(tab, game.N, M, &counter);
+                    printf("Completed, with a total of %d solutions\n", counter);
+                }
+
+                break;
+            case 1:
+                // Sudoku com input genérico mostrando uma solução
+                if (game.generic == 0)
+                {
+                    int *V = (int *) malloc(MAX * sizeof(int));
+                    int count = ValidGeneric(tab, game.N, V);
             
-            if(solveSudokuGeneric(tab, game.N, M, count, V))
-            {
-                printTabGeneric(tab, game.N, M, V);
-                printf("Solution found\n");
-            }
-            else
-            {
-                printf("No solutions exist\n");
-            }
+                    printTabGeneric(tab, game.N, M, V);
+                    printf("Processing\n");
             
-            free(V);
-            V = NULL;
+                    if(solveSudokuGeneric(tab, game.N, M, count, V))
+                    {
+                        printTabGeneric(tab, game.N, M, V);
+                        printf("Solution found\n");
+                    }
+                    else
+                    {
+                        printf("No solutions exist\n");
+                    }   
+            
+                    free(V);
+                    V = NULL;
+                }
+                // Sudoku padrão mostrando uma solução
+                else
+                {
+                    printTab(tab, game.N, M);
+                    printf("Processing\n");
+            
+                    if(solveSudoku(tab, game.N, M))
+                    {
+                        printTab(tab, game.N, M);
+                        printf("Solution found\n");
+                    }
+                    else
+                    {
+                        printf("No solution exists\n");
+                    }
+                }
+
+                break;
+            default: 
+                printf("Invalid input!");
+                return 1;
         }
     }
     else
     {
-        printTab(tab, game.N, M);
-        printf("Good luck!\n");
+        if (game.generic == 1)
+        {
         
-        playGame(tab, game.N, M);
+            printTab(tab, game.N, M);
+            printf("Good luck!\n");
+        
+            playGame(tab, game.N, M);
+        }
+        else
+        {
+            int *V = (int *) malloc(MAX * sizeof(int));
+            int count = ValidGeneric(tab, game.N, V);
+
+            printTabGeneric(tab, game.N, M, V);
+            printf("Good luck!\n");
+        
+            playGame(tab, game.N, M);
+
+            free(V);
+            V = NULL;
+        } 
+        
     }
 
     for (int i = 0; i < game.N; i++)
@@ -204,7 +234,8 @@ int loadfile(int **tab, int N, int input)
 {
     FILE *file;
     
-    switch (input) {
+    switch (input) 
+    {
         case 1:
             file = fopen("input1.txt", "r");
             break;
@@ -277,6 +308,12 @@ void playGame(int **tab, int N, int M)
             continue;
         }
 
+        if (num > N || num <= 0)
+        {
+            printf("Invalid number\n");
+            continue;
+        }
+
         if ((tab[i][j] == 0) && (ismovValid(tab, i, j, num, N, M)))
         {
             tab[i][j] = num;
@@ -329,7 +366,7 @@ bool solveSudoku(int **tab, int N, int M)
 }
 
 // Resolvedor exibindo todos os casos de resposta possíveis
-int solveSudokuComplete(int **tab, int N, int M, int *counter)
+void solveSudokuComplete(int **tab, int N, int M, int *counter)
 {
     for (int i = 0; i < N; i++)
     {
@@ -349,7 +386,7 @@ int solveSudokuComplete(int **tab, int N, int M, int *counter)
                     }
                 }
 
-                return 1;
+                return;
             }
         }
     }
@@ -357,7 +394,6 @@ int solveSudokuComplete(int **tab, int N, int M, int *counter)
     (*counter)++;
     printTab(tab, N, M);
     printf("%d", *counter);
-    return 0;
 }
 
 // Resolvedor usando quaisquer valores de entrada genéricos
@@ -393,7 +429,7 @@ bool solveSudokuGeneric(int **tab, int N, int M, int count, int *V)
 }
 
 // Resolvedor exibindo todos os casos de resposta possíveis e usando quaisquer valores de entrada genéricos
-int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter)
+void solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *counter)
 {
     for (int i = 0; i < N; i++)
     {
@@ -413,7 +449,7 @@ int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *
                     }
                 }
 
-                return 1;
+                return;
             }
         }
     }
@@ -421,7 +457,6 @@ int solveSudokuCompleteGeneric(int **tab, int N, int M, int count, int *V, int *
     (*counter)++;
     printTabGeneric(tab, N, M, V);
     printf("%d", *counter);
-    return 0;
 }
 
 // Verifica e converte os valores de entrada
@@ -720,6 +755,10 @@ Config lobby(void)
                         printf("Invalid resolution mode!\n");
                         ClearBuffer();
                     }
+                }
+                else
+                {
+                    state = DONE;
                 }
             }    
             else
